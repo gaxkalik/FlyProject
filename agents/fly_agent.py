@@ -63,6 +63,7 @@ class FlyAgentSwarm:
         self.saccade_timer = np.zeros(num_agents, dtype=np.float32)
         self.acoustic_timer = np.zeros(num_agents, dtype=np.float32)
         self.odor_timer = np.zeros(num_agents, dtype=np.float32)
+        self.just_released_odor = np.zeros(num_agents, dtype=bool)
 
         # Swarm alert tracking
         self.alert_states = np.zeros(num_agents, dtype=bool)
@@ -111,8 +112,9 @@ class FlyAgentSwarm:
                     self.alert_states[i] = True
                     self.first_alert_time[i] = current_time
 
-            if odor_fired[i]:
+            if odor_fired[i] and self.odor_timer[i] <= 0.0:
                 self.odor_timer[i] = 0.5
+                self.just_released_odor[i] = True
 
         # 2. Update Timers
         self.saccade_timer = np.maximum(0.0, self.saccade_timer - dt)
@@ -165,4 +167,6 @@ class FlyAgentSwarm:
 
     def check_new_odor_releases(self) -> np.ndarray:
         """Returns boolean mask of agents that just triggered a pheromone release."""
-        return (self.odor_timer > 0.45)
+        releases = self.just_released_odor.copy()
+        self.just_released_odor[:] = False
+        return releases

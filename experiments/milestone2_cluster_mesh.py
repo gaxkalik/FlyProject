@@ -56,7 +56,7 @@ def run_milestone2_cluster_simulation(
     # 2. Setup Spatial Geometry: Natural Staggered Swarm Cluster (12 Flies)
     # Provides lateral and diagonal line-of-sight visual visibility (LC11 optimal field)
     # and near-field acoustic coupling between neighbor tiers.
-    initial_positions = np.array([
+    raw_positions = np.array([
         [0.00,  0.00, 1.00],   # Tier 0: Fly 0 (Front tip in weather sector)
         [0.08,  0.08, 1.00],   # Tier 1: Fly 1 (Right lateral wing)
         [0.08, -0.08, 1.00],   # Tier 1: Fly 2 (Left lateral wing)
@@ -71,13 +71,18 @@ def run_milestone2_cluster_simulation(
         [0.32, -0.10, 0.99]    # Tier 4: Fly 11 (Rear left)
     ], dtype=np.float32)
 
+    # Orient cluster so Tier 0 leads at the forward apex (+X)
+    initial_positions = raw_positions.copy()
+    initial_positions[:, 0] = -raw_positions[:, 0] + 0.32
+
     initial_headings = np.zeros(num_agents, dtype=np.float32)  # Cruising +X
 
-    # 3. Weather Front strictly localized to Fly 0 (Sector 0)
+    # 3. Weather Front strictly localized to Fly 0 (Sector 0) at onset time
+    fly0_at_onset = initial_positions[0] + np.array([0.45 * weather_onset_s, 0.0, 0.0], dtype=np.float32)
     weather_front = WeatherFrontParams(
-        center=np.array([0.02, 0.0, 1.0], dtype=np.float32),
+        center=fly0_at_onset,
         velocity=np.zeros(3, dtype=np.float32),
-        radius=0.06,            # Strictly confined to 6 cm around Fly 0
+        radius=0.10,            # Confined shock cell around Fly 0
         temp_drop=9.0,          # 9 deg C cooling
         pressure_drop=2.8,      # 2.8 kPa drop
         humidity_spike=25.0,
