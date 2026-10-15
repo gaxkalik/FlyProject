@@ -95,16 +95,17 @@ class DrosophilaSensoryEncoder:
         i_ext[:, self.idx_vp3] = 0.1 * moist_stat + 2.0 * moist_dyn
 
         # 4. Acoustic Near-Field Particle Velocity (JON-A / JON-B)
-        # Threshold: normal cruising wingbeat (<0.25 mm/s) is filtered; alarm flutter (>0.5 mm/s) activates
-        excess_acoustic = np.maximum(0.0, acoustic_velocity - 0.25)
-        acoustic_drive = 6.0 * excess_acoustic
+        # Threshold: normal cruising wingbeat & ambient turbulence noise (<0.45 mm/s) is filtered;
+        # Active alarm flutter (>0.6 mm/s) activates JON-A/B
+        excess_acoustic = np.maximum(0.0, acoustic_velocity - 0.45)
+        acoustic_drive = 7.5 * excess_acoustic
         i_ext[:, self.idx_jon_a] = acoustic_drive
-        i_ext[:, self.idx_jon_b] = 1.2 * acoustic_drive
+        i_ext[:, self.idx_jon_b] = 1.3 * acoustic_drive
 
         # 5. Visual Conspecific Motion & Looming
-        # Threshold: normal cruising optic flow (<1.5 rad/s) is filtered out;
-        # High-g evasive saccades (>4 rad/s) activate LC11
-        excess_motion = np.maximum(0.0, visual_conspecific_motion - 1.5)
+        # Threshold: normal cruising optic flow & turbulent buffeting (<7.5 rad/s) is filtered out;
+        # High-g evasive saccades (>20 rad/s) activate LC11
+        excess_motion = np.maximum(0.0, visual_conspecific_motion - 7.5)
         i_ext[:, self.idx_lc11] = 4.5 * excess_motion
 
         # LC4 responds to looming expansion (imminent collision / fast approach > 0.01 rad/s)
