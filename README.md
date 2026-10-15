@@ -136,7 +136,18 @@ python3 run_tests.py --milestone 4    # Milestone 4: 40-Fly Swarm Criticality & 
 python3 run_tests.py --milestone 5    # Milestone 5: Octopaminergic Neuromodulation
 python3 run_tests.py --milestone 6    # Milestone 6: Fault Tolerance & Fog Blackout
 
-# 3. Run full automated suite (Unit tests + Milestones 1 to 6)
+# 3. Run automated UI & DOM verification tests (< 1 second)
+./test_ui.sh --test                   # Shell script interface
+python3 run_tests.py --ui             # Python runner interface
+
+# 4. Launch Interactive Web UI Dashboard
+./test_ui.sh --serve                  # Starts local server and opens browser automatically
+./test_ui.sh --serve --port 9090      # Serve on custom port
+
+# 5. Interactive Terminal UI Menu (starts menu to serve UI, test DOM, view plots)
+./test_ui.sh
+
+# 6. Run full automated suite (Unit tests + All 6 Milestones + UI Tests)
 python3 run_tests.py --all
 ```
 
@@ -147,8 +158,14 @@ python3 run_tests.py --all
 ```
 FlyProject/
 ├── run_tests.py                  # Unified automated test runner and milestone CLI
+├── test_ui.sh                    # Interactive UI testing shell script and local server launcher
 ├── requirements.txt              # Production dependency specifications
 ├── README.md                     # Comprehensive technical documentation
+├── ui/                           # Interactive Web UI Dashboard
+│   ├── dashboard.html            # 3D interactive swarm canvas with physical channel controls
+│   └── index.html                # Local web root entrypoint
+├── tests/                        # Automated UI and DOM integrity test suite
+│   └── test_ui.py                # Headless DOM and HTTP server test suite
 ├── fly_connectome/               # FlyWire connectome circuit reconstruction
 │   ├── circuit_builder.py        # 23-neuron sensory-motor canonical sub-circuit
 │   ├── cell_types.py             # Biological cell-type specifications and neurotransmitters

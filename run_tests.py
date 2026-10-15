@@ -318,8 +318,9 @@ Examples:
         """
     )
     parser.add_argument("--quick", action="store_true", help="Run fast unit tests only")
+    parser.add_argument("--ui", action="store_true", help="Run automated UI and dashboard tests")
     parser.add_argument("--milestone", type=int, choices=range(1, 7), help="Run a specific milestone (1-6)")
-    parser.add_argument("--all", action="store_true", help="Run unit tests and all 6 milestones sequentially")
+    parser.add_argument("--all", action="store_true", help="Run unit tests, all 6 milestones, and UI tests")
 
     args = parser.parse_args()
 
@@ -328,15 +329,24 @@ Examples:
         success = run_unit_tests()
         sys.exit(0 if success else 1)
 
+    if args.ui:
+        from tests.test_ui import run_ui_tests
+        success = run_ui_tests()
+        sys.exit(0 if success else 1)
+
     if args.milestone:
         success = run_milestone(args.milestone)
         sys.exit(0 if success else 1)
 
     if args.all:
-        print(f"\n{Color.BOLD}{Color.OKBLUE}STARTING COMPREHENSIVE BENCHMARK: UNIT TESTS + ALL 6 MILESTONES{Color.ENDC}\n")
+        print(f"\n{Color.BOLD}{Color.OKBLUE}STARTING COMPREHENSIVE BENCHMARK: UNIT TESTS + ALL 6 MILESTONES + UI TESTS{Color.ENDC}\n")
         all_passed = True
         unit_ok = run_unit_tests()
         all_passed = all_passed and unit_ok
+
+        from tests.test_ui import run_ui_tests
+        ui_ok = run_ui_tests()
+        all_passed = all_passed and ui_ok
 
         milestone_results = {}
         for m in range(1, 7):
@@ -348,6 +358,7 @@ Examples:
         print(f"{Color.BOLD}FINAL SUMMARY REPORT{Color.ENDC}")
         print(f"{Color.HEADER}{'=' * 75}{Color.ENDC}")
         print(f"  • Unit Tests:    {'[ PASS ]' if unit_ok else '[ FAIL ]'}")
+        print(f"  • UI Tests:      {'[ PASS ]' if ui_ok else '[ FAIL ]'}")
         for m in range(1, 7):
             status = '[ PASS ]' if milestone_results[m] else '[ FAIL ]'
             print(f"  • Milestone {m}:  {status}")
