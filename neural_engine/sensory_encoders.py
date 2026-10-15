@@ -27,10 +27,24 @@ class DrosophilaSensoryEncoder:
         self.idx_lc4 = circuit.get_index("LC4")
         self.idx_co2 = circuit.get_index("Glomerulus_V_CO2")
 
-        # Baseline physiological setpoints
+        # Baseline physiological setpoints (adaptable to real-time ambient weather)
         self.T_prefer = 24.0      # Preferred temperature (Celsius)
         self.H_prefer = 65.0      # Preferred relative humidity (%)
         self.P_baseline = 101.325 # Standard barometric pressure (kPa)
+        self.wind_baseline = 0.45 # Normal cruising airspeed threshold (m/s)
+
+    def set_ambient_baselines(
+        self,
+        temp_c: float,
+        humidity_pct: float,
+        pressure_kpa: float,
+        wind_speed_ms: float = 0.45
+    ):
+        """Calibrates sensory adaptation setpoints to live ambient meteorological conditions."""
+        self.T_prefer = float(temp_c)
+        self.H_prefer = float(humidity_pct)
+        self.P_baseline = float(pressure_kpa)
+        self.wind_baseline = float(wind_speed_ms)
 
     def encode_sensory_inputs(
         self,
@@ -53,8 +67,9 @@ class DrosophilaSensoryEncoder:
         i_ext = np.zeros((num_agents, self.circuit.num_neurons), dtype=np.float32)
 
         # 1. Mechanosensation: Johnston's Organ C & E (Wind & Pressure drop)
-        # Steady-state drag deflection + dynamic pressure drop rate
-        wind_drive = 2.5 * np.maximum(0.0, rel_airspeed_ms)
+        # Responds to excess airspeed above adapted cruising/ambient level + dynamic pressure drop rate
+        excess_wind = np.maximum(0.0, rel_airspeed_ms - self.wind_baseline)
+        wind_drive = 3.5 * excess_wind
         press_drop_drive = 4.0 * np.maximum(0.0, -d_pressure_dt)  # Positive for falling barometric pressure
         i_ext[:, self.idx_jon_c] = wind_drive + 0.6 * press_drop_drive
         i_ext[:, self.idx_jon_e] = 0.5 * wind_drive + press_drop_drive
